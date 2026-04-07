@@ -58,3 +58,10 @@ Content dynamically changes based on air quality:
 | **Design** | Glassmorphism, CSS Custom Properties, CSS Animations |
 
 ---
+🔬 Research Objectives
+Monitor local air quality without deploying physical sensors
+Compare official AQI readings with human-observed conditions
+Correlate physical symptoms (coughing, eye irritation) with poor air quality
+Identify local pollution hotspots through crowdsourced data
+📄 License
+This project was built as an academic capstone project.
