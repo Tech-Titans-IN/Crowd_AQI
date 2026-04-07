@@ -1,0 +1,146 @@
+<!--
+  dashboard.html  —  Analytics Dashboard (Theme-Aware)
+  ======================================================
+  This dashboard inherits the dynamic theming from base.html.
+  The avg_aqi from all reports determines the theme palette.
+-->
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Crowd-AQI{% endblock %}
+
+{% block content %}
+
+<!-- Dashboard Header -->
+<section class="dash-header">
+    <div class="dash-header-content">
+        <h1 class="dash-title">
+            <span>📊</span> Analytics Dashboard
+        </h1>
+        <p class="dash-subtitle">
+            Aggregated insights from {{ total_reports }} crowdsourced air quality report{{ 's' if total_reports != 1 else '' }}.
+        </p>
+    </div>
+</section>
+
+<!-- Summary Stat Cards -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card" id="stat-total">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+                <span class="stat-value">{{ total_reports }}</span>
+                <span class="stat-label">Total Reports</span>
+            </div>
+        </div>
+
+        <div class="stat-card" id="stat-aqi">
+            <div class="stat-icon">
+                <span class="aqi-dot {{ avg_aqi_class }}"></span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-value">{{ avg_aqi if avg_aqi else '—' }}</span>
+                <span class="stat-label">Avg. Official AQI</span>
+                <span class="stat-sub {{ avg_aqi_class }}">{{ avg_aqi_category }}</span>
+            </div>
+        </div>
+
+        <div class="stat-card" id="stat-symptom">
+            <div class="stat-icon">🩺</div>
+            <div class="stat-info">
+                <span class="stat-value stat-value-sm">{{ most_common_symptom }}</span>
+                <span class="stat-label">Top Symptom</span>
+            </div>
+        </div>
+
+        <div class="stat-card" id="stat-location">
+            <div class="stat-icon">📍</div>
+            <div class="stat-info">
+                <span class="stat-value stat-value-sm">{{ worst_location }}</span>
+                <span class="stat-label">Worst Reported Location</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analysis Charts -->
+{% if chart1_exists or chart2_exists %}
+<section class="charts-section">
+    <h2 class="section-title">📈 Data Analysis</h2>
+    <div class="charts-grid">
+        {% if chart1_exists %}
+        <div class="chart-card" id="chart-symptoms">
+            <h3>AQI vs Reported Symptoms</h3>
+            <p class="chart-desc">Average number of symptoms per AQI category.</p>
+            <img src="{{ url_for('static', filename='plots/aqi_vs_symptoms.png') }}?v={{ range(10000) | random }}"
+                 alt="AQI vs symptoms chart" class="chart-img" loading="lazy">
+        </div>
+        {% endif %}
+        {% if chart2_exists %}
+        <div class="chart-card" id="chart-perception">
+            <h3>AQI vs User Perception</h3>
+            <p class="chart-desc">Official AQI compared to user visibility and smell ratings.</p>
+            <img src="{{ url_for('static', filename='plots/aqi_vs_perception.png') }}?v={{ range(10000) | random }}"
+                 alt="AQI vs perception chart" class="chart-img" loading="lazy">
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Reports Table -->
+<section class="reports-section">
+    <h2 class="section-title">📋 Recent Reports</h2>
+
+    {% if reports %}
+    <div class="table-wrapper">
+        <table class="reports-table" id="reports-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Time</th>
+                    <th>Location</th>
+                    <th>Official AQI</th>
+                    <th>Visibility</th>
+                    <th>Smell</th>
+                    <th>Symptoms</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td class="td-time">{{ r.timestamp[:16].replace('T', ' ') }}</td>
+                    <td>{{ r.location_name }}</td>
+                    <td>
+                        {% if r.official_aqi %}
+                        <span class="aqi-pill {{ r.aqi_class }}">{{ r.official_aqi }} — {{ r.aqi_category }}</span>
+                        {% else %}
+                        <span class="aqi-pill unknown">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td class="td-center">{{ r.visibility_rating }} / 5</td>
+                    <td class="td-center">{{ r.smell_rating }} / 5</td>
+                    <td>
+                        {% if r.symptoms_list and r.symptoms_list != ['none'] %}
+                            {% for s in r.symptoms_list %}
+                            <span class="symptom-tag">{{ s.replace('_', ' ').title() }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="symptom-tag none">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" id="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No Reports Yet</h3>
+        <p>Be the first! Head to the <a href="{{ url_for('index') }}">Report page</a> and submit your observation.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}

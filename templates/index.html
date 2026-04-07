@@ -1,0 +1,289 @@
+<!--
+  index.html  —  Dynamic Report Submission Page
+  ================================================
+  This page adapts its ENTIRE visual identity based on the current AQI:
+
+  • AQI ≤ 70  (good)      →  Forest/sage green calm theme
+  • AQI 71–150 (moderate)  →  Smoggy mustard haze theme
+  • AQI > 150 (hazardous)  →  Alarming crimson/red theme
+
+  KEY FEATURES:
+  1. Live AQI display card with dynamic colour
+  2. Recommendation module that changes content per theme
+  3. Glassmorphic form cards
+  4. Custom range sliders for visibility & smell (not dropdowns)
+  5. Pill-shaped toggle buttons for symptoms
+  6. Geolocation-triggered theme switch
+-->
+{% extends "base.html" %}
+
+{% block title %}Report Air Quality — Crowd-AQI{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO SECTION  —  AQI Display + Recommendation Module
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <span class="hero-emoji" id="hero-emoji">🌍</span>
+            Report Air Quality
+        </h1>
+        <p class="hero-subtitle">
+            Your observations combined with official data create a clearer
+            picture of the air we breathe.
+        </p>
+
+        <!-- ──────── LIVE AQI CARD ────────
+             This card shows the current AQI value.  Its border, colours,
+             and "glow" effect all change based on the active theme.
+             The JS theme engine updates the value + category text.
+        ──────────────────────────────────── -->
+        <div class="aqi-hero-card glass-card" id="aqi-hero-card">
+            <div class="aqi-hero-ring" id="aqi-hero-ring">
+                <span class="aqi-hero-value" id="aqi-hero-value">
+                    {{ initial_aqi if initial_aqi else '--' }}
+                </span>
+            </div>
+            <div class="aqi-hero-info">
+                <span class="aqi-hero-label">Air Quality Index</span>
+                <span class="aqi-hero-category" id="aqi-hero-category">
+                    {% if initial_aqi %}
+                        {{ 'Good' if initial_aqi <= 70 else ('Moderate' if initial_aqi <= 150 else 'Hazardous') }}
+                    {% else %}
+                        Awaiting Location
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- ──────── RECOMMENDATION MODULE ────────
+             Content is swapped by JavaScript based on AQI theme.
+             Three hidden versions exist; JS shows only the active one.
+        ──────────────────────────────────────────── -->
+        <div class="recommendation-module" id="recommendation-module">
+
+            <!-- STATE 1: Good / Optimal (shown by default) -->
+            <div class="rec-panel rec-good" id="rec-good">
+                <div class="rec-icon">🌿</div>
+                <h3>Healthy Air — Enjoy the Outdoors!</h3>
+                <div class="rec-grid">
+                    <div class="rec-item">
+                        <span class="rec-emoji">🏃</span>
+                        <span>Go for a run or morning jog</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🧘</span>
+                        <span>Try outdoor yoga or meditation</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🎨</span>
+                        <span>Sketch or paint in a park</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🚴</span>
+                        <span>Perfect day for a bike ride</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATE 2: Moderate / Polluted -->
+            <div class="rec-panel rec-moderate" id="rec-moderate" style="display:none;">
+                <div class="rec-icon">⚠️</div>
+                <h3>Caution — Air Quality Declining</h3>
+                <div class="rec-grid">
+                    <div class="rec-item">
+                        <span class="rec-emoji">😷</span>
+                        <span>Wear a mask if you're sensitive</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🪟</span>
+                        <span>Close windows to keep smog out</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🚶</span>
+                        <span>Avoid heavy outdoor exertion</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">💧</span>
+                        <span>Stay hydrated, drink warm fluids</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATE 3: Hazardous / Severe -->
+            <div class="rec-panel rec-hazardous" id="rec-hazardous" style="display:none;">
+                <div class="rec-icon">🚨</div>
+                <h3>DANGER — Stay Indoors!</h3>
+                <div class="rec-grid">
+                    <div class="rec-item">
+                        <span class="rec-emoji">🏠</span>
+                        <span>Do NOT go outside unnecessarily</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🌬️</span>
+                        <span>Keep air purifiers running on HIGH</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🚫</span>
+                        <span>NO running, cycling, or exercise</span>
+                    </div>
+                    <div class="rec-item">
+                        <span class="rec-emoji">🏥</span>
+                        <span>Seek medical help if symptoms worsen</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     REPORT FORM  —  Glassmorphic Cards with Custom Inputs
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="form-section">
+    <form action="{{ url_for('submit_report') }}" method="POST"
+          class="report-form" id="report-form">
+
+        <!-- ── STEP 1: LOCATION ──────────────────────────────── -->
+        <div class="form-card glass-card">
+            <div class="form-card-header">
+                <span class="step-badge">1</span>
+                <h2>Your Location</h2>
+            </div>
+
+            <div class="form-group">
+                <label for="location_name">Location Name</label>
+                <input type="text" id="location_name" name="location_name"
+                       placeholder="e.g. Campus Main Gate, Office Block B"
+                       required autocomplete="off">
+                <span class="form-hint">Be specific — this helps identify local hotspots.</span>
+            </div>
+
+            <!-- Hidden coordinate fields (filled by Geolocation API) -->
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+
+            <button type="button" class="geo-btn" id="geo-btn" onclick="getLocation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="2" x2="12" y2="6"/>
+                    <line x1="12" y1="18" x2="12" y2="22"/>
+                    <line x1="2" y1="12" x2="6" y2="12"/>
+                    <line x1="18" y1="12" x2="22" y2="12"/>
+                </svg>
+                <span id="geo-btn-text">Use My Location</span>
+            </button>
+            <p class="geo-status" id="geo-status"></p>
+        </div>
+
+        <!-- ── STEP 2: VISIBILITY (Custom Range Slider) ──────── -->
+        <div class="form-card glass-card">
+            <div class="form-card-header">
+                <span class="step-badge">2</span>
+                <h2>Visibility Level</h2>
+            </div>
+            <p class="form-card-desc">How clear is the sky right now?</p>
+
+            <!--
+              CUSTOM SLIDER APPROACH:
+              We use a native <input type="range"> with heavy CSS customisation.
+              The JS reads the slider value and updates the emoji + label in
+              real-time, making the interaction feel alive and responsive.
+            -->
+            <div class="slider-wrapper">
+                <div class="slider-labels">
+                    <span>☀️ Crystal Clear</span>
+                    <span>😶‍🌫️ Dense Haze</span>
+                </div>
+                <input type="range" min="1" max="5" value="3" step="1"
+                       class="custom-slider" id="visibility-slider"
+                       name="visibility_rating">
+                <div class="slider-feedback">
+                    <span class="slider-emoji" id="vis-emoji">🌥️</span>
+                    <span class="slider-text" id="vis-text">Moderate Haze</span>
+                    <span class="slider-value" id="vis-value">3 / 5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STEP 3: SMELL (Custom Range Slider) ───────────── -->
+        <div class="form-card glass-card">
+            <div class="form-card-header">
+                <span class="step-badge">3</span>
+                <h2>Smell Level</h2>
+            </div>
+            <p class="form-card-desc">Do you notice any unusual odours in the air?</p>
+
+            <div class="slider-wrapper">
+                <div class="slider-labels">
+                    <span>🍃 Fresh Air</span>
+                    <span>🤢 Unbearable</span>
+                </div>
+                <input type="range" min="1" max="5" value="3" step="1"
+                       class="custom-slider" id="smell-slider"
+                       name="smell_rating">
+                <div class="slider-feedback">
+                    <span class="slider-emoji" id="smell-emoji">💨</span>
+                    <span class="slider-text" id="smell-text">Noticeable</span>
+                    <span class="slider-value" id="smell-value">3 / 5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STEP 4: SYMPTOMS (Pill-shaped Toggle Buttons) ── -->
+        <div class="form-card glass-card">
+            <div class="form-card-header">
+                <span class="step-badge">4</span>
+                <h2>Physical Symptoms</h2>
+            </div>
+            <p class="form-card-desc">Select any you're experiencing right now.</p>
+
+            <!--
+              PILL-TOGGLE APPROACH:
+              Each symptom is a hidden checkbox wrapped in a styled <label>.
+              When checked, the :checked CSS pseudo-class triggers a glowing
+              pill highlight effect.  "No Symptoms" unchecks the others via JS.
+            -->
+            <div class="symptom-grid">
+                <label class="symptom-pill" id="symptom-coughing">
+                    <input type="checkbox" name="symptoms" value="coughing">
+                    <span class="pill-face"><span class="pill-icon">😷</span> Coughing</span>
+                </label>
+                <label class="symptom-pill" id="symptom-eye-irritation">
+                    <input type="checkbox" name="symptoms" value="eye_irritation">
+                    <span class="pill-face"><span class="pill-icon">👁️</span> Eye Irritation</span>
+                </label>
+                <label class="symptom-pill" id="symptom-headache">
+                    <input type="checkbox" name="symptoms" value="headache">
+                    <span class="pill-face"><span class="pill-icon">🤕</span> Headache</span>
+                </label>
+                <label class="symptom-pill" id="symptom-breathing">
+                    <input type="checkbox" name="symptoms" value="breathing_difficulty">
+                    <span class="pill-face"><span class="pill-icon">🫁</span> Breathing Difficulty</span>
+                </label>
+                <label class="symptom-pill" id="symptom-throat">
+                    <input type="checkbox" name="symptoms" value="throat_irritation">
+                    <span class="pill-face"><span class="pill-icon">🗣️</span> Throat Irritation</span>
+                </label>
+                <label class="symptom-pill symptom-pill-none" id="symptom-none">
+                    <input type="checkbox" name="symptoms" value="none" id="no-symptoms-check">
+                    <span class="pill-face"><span class="pill-icon">✅</span> No Symptoms</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- ── SUBMIT BUTTON ─────────────────────────────────── -->
+        <button type="submit" class="submit-btn" id="submit-btn">
+            <span class="submit-btn-text">Submit Report</span>
+            <span class="submit-btn-loader" style="display:none;">
+                <span class="spinner"></span> Submitting…
+            </span>
+        </button>
+
+    </form>
+</section>
+
+{% endblock %}

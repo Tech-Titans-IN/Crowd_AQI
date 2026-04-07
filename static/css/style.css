@@ -1,0 +1,1287 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════
+ *  style.css  —  Crowd-AQI Dynamic Theming Engine
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ *  HOW THE THEMING WORKS
+ *  ─────────────────────
+ *  We use CSS Custom Properties (--variables) scoped to a `data-theme`
+ *  attribute on the <body> tag.  When JavaScript changes the attribute
+ *  (e.g. body.dataset.theme = "hazardous"), ALL colours across the
+ *  entire page instantly re-resolve to the new palette.
+ *
+ *  The `transition` property on <body> ensures the colour swap is a
+ *  smooth 0.8-second fade rather than a jarring switch.
+ *
+ *  TABLE OF CONTENTS
+ *  ────────────────────────────
+ *  §0  Theme Palettes (CSS Variables)
+ *  §1  Reset & Base
+ *  §2  Background Layers (clouds, vignette)
+ *  §3  Navigation
+ *  §4  Flash Messages
+ *  §5  Hero Section
+ *  §6  AQI Hero Card
+ *  §7  Recommendation Module
+ *  §8  Glassmorphism Cards
+ *  §9  Form Elements
+ *  §10 Custom Range Sliders
+ *  §11 Symptom Pill Toggles
+ *  §12 Submit Button
+ *  §13 Dashboard Components
+ *  §14 Reports Table
+ *  §15 Footer
+ *  §16 Animations & Keyframes
+ *  §17 Responsive Breakpoints
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §0  THEME PALETTES  —  CSS Custom Properties
+   ─────────────────────────────────────────────────────────────────
+   Each [data-theme] selector defines the FULL colour palette.
+   Components only ever reference var(--xxx), NEVER hard-coded colours.
+   This is what makes the entire UI "theme-aware".
+   ───────────────────────────────────────────────────────────────── */
+
+/* ═══ THEME 1: GOOD / OPTIMAL (AQI ≤ 70) ═══════════════════════
+   Vibe:  Fresh, natural, calming — forest after rain.
+   Palette: Deep forest greens, twilight blues, aubergine depth,
+            warm cherry-blossom pink & golden-yellow accents.
+            "Soft Linen" text (translucent eggshell off-white).
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="good"] {
+    --bg-primary:       #0c1a12;       /* Deep forest floor           */
+    --bg-secondary:     #122518;       /* Dark sage canopy            */
+    --bg-card:          rgba(22, 48, 32, 0.55);  /* Translucent card  */
+    --bg-card-hover:    rgba(28, 62, 40, 0.65);
+    --bg-input:         rgba(14, 30, 20, 0.7);
+    --bg-depth:         #1a1030;       /* Twilight aubergine depth    */
+
+    /* Accent: warm cherry-blossom pink                              */
+    --accent:           #e8a0bf;       /* Pastel cherry blossom       */
+    --accent-glow:      rgba(232, 160, 191, 0.2);
+    --accent-dark:      #c97da3;
+    --accent-gradient:  linear-gradient(135deg, #e8a0bf, #d4a574);
+    --accent-secondary: #d4a574;       /* Cozy golden-yellow          */
+
+    /* Text: Soft Linen (NO pure white, NO digital grey)              */
+    --text-primary:     #f5efe6;       /* Warm eggshell off-white     */
+    --text-secondary:   rgba(245, 239, 230, 0.7);
+    --text-muted:       rgba(245, 239, 230, 0.4);
+
+    /* Borders & shadows                                              */
+    --border:           rgba(232, 160, 191, 0.12);
+    --border-active:    rgba(232, 160, 191, 0.35);
+    --shadow-glow:      0 0 24px rgba(232, 160, 191, 0.12);
+    --glass-bg:         rgba(22, 48, 32, 0.45);
+    --glass-border:     rgba(232, 160, 191, 0.15);
+
+    /* Navbar specific                                                */
+    --nav-bg:           rgba(12, 26, 18, 0.88);
+
+    /* AQI card ring colour                                           */
+    --aqi-ring:         #2ecc71;
+    --aqi-ring-glow:    rgba(46, 204, 113, 0.3);
+}
+
+
+/* ═══ THEME 2: MODERATE / POLLUTED (AQI 71–150) ════════════════
+   Vibe:  Smoggy, cautionary, murky — a hazy afternoon.
+   Palette: Muted mustard yellows, smoggy greys, washed-out browns.
+   The cloud animation becomes visible.
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="moderate"] {
+    --bg-primary:       #1a1610;       /* Dusty smog base             */
+    --bg-secondary:     #2a2318;       /* Murky brown-grey            */
+    --bg-card:          rgba(48, 40, 28, 0.55);
+    --bg-card-hover:    rgba(60, 50, 34, 0.65);
+    --bg-input:         rgba(36, 30, 20, 0.7);
+    --bg-depth:         #1e1a14;
+
+    --accent:           #d4a843;       /* Muted mustard gold          */
+    --accent-glow:      rgba(212, 168, 67, 0.2);
+    --accent-dark:      #b8922e;
+    --accent-gradient:  linear-gradient(135deg, #d4a843, #b07a3a);
+    --accent-secondary: #b07a3a;       /* Washed-out brown            */
+
+    --text-primary:     #e8e0d0;       /* Dusty linen                 */
+    --text-secondary:   rgba(232, 224, 208, 0.65);
+    --text-muted:       rgba(232, 224, 208, 0.35);
+
+    --border:           rgba(212, 168, 67, 0.15);
+    --border-active:    rgba(212, 168, 67, 0.4);
+    --shadow-glow:      0 0 24px rgba(212, 168, 67, 0.12);
+    --glass-bg:         rgba(48, 40, 28, 0.4);
+    --glass-border:     rgba(212, 168, 67, 0.15);
+
+    --nav-bg:           rgba(26, 22, 16, 0.9);
+
+    --aqi-ring:         #d4a843;
+    --aqi-ring-glow:    rgba(212, 168, 67, 0.35);
+}
+
+
+/* ═══ THEME 3: HAZARDOUS / SEVERE (AQI > 150) ══════════════════
+   Vibe:  Alarming, urgent, toxic — sirens in the dark.
+   Palette: Deep hazard reds, crimson, stark black.
+   Pulsing borders + red vignette become visible.
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="hazardous"] {
+    --bg-primary:       #120808;       /* Near-black blood red        */
+    --bg-secondary:     #1a0c0c;       /* Dark crimson depth          */
+    --bg-card:          rgba(50, 14, 14, 0.55);
+    --bg-card-hover:    rgba(65, 18, 18, 0.65);
+    --bg-input:         rgba(35, 10, 10, 0.7);
+    --bg-depth:         #0a0404;
+
+    --accent:           #e8434a;       /* Hazard red                  */
+    --accent-glow:      rgba(232, 67, 74, 0.25);
+    --accent-dark:      #c42d33;
+    --accent-gradient:  linear-gradient(135deg, #e8434a, #8b1a1a);
+    --accent-secondary: #ff6b6b;       /* Brighter alarm red          */
+
+    --text-primary:     #f0e4e4;       /* Pale, worried white-rose    */
+    --text-secondary:   rgba(240, 228, 228, 0.7);
+    --text-muted:       rgba(240, 228, 228, 0.4);
+
+    --border:           rgba(232, 67, 74, 0.2);
+    --border-active:    rgba(232, 67, 74, 0.5);
+    --shadow-glow:      0 0 24px rgba(232, 67, 74, 0.2);
+    --glass-bg:         rgba(50, 14, 14, 0.45);
+    --glass-border:     rgba(232, 67, 74, 0.2);
+
+    --nav-bg:           rgba(18, 8, 8, 0.92);
+
+    --aqi-ring:         #e8434a;
+    --aqi-ring-glow:    rgba(232, 67, 74, 0.4);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §1  RESET & BASE STYLES
+   ───────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+
+    /*
+     * THIS IS THE KEY LINE: a 0.8s transition on background-color
+     * ensures that when data-theme changes (via JS), the entire page
+     * fades smoothly into the new palette rather than flashing.
+     */
+    transition:
+        background-color 0.8s ease,
+        color 0.8s ease;
+}
+
+h1, h2, h3, h4 {
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+p { color: var(--text-secondary); }
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+a:hover { color: var(--accent-dark); }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §2  BACKGROUND LAYERS  —  Animated Clouds & Vignette
+   ─────────────────────────────────────────────────────────────────
+   These layers sit behind all content (z-index: 0) and are
+   controlled per-theme:
+
+   • "good"      →  clouds hidden, vignette hidden
+   • "moderate"  →  clouds visible & drifting, vignette hidden
+   • "hazardous" →  clouds hidden, red vignette pulsing
+   ───────────────────────────────────────────────────────────────── */
+.bg-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;       /* Click-through — doesn't block UI   */
+    overflow: hidden;
+    opacity: 0;                 /* Hidden by default (good theme)     */
+    transition: opacity 1s ease;
+}
+
+/* Show clouds only in the moderate (smoggy) theme */
+[data-theme="moderate"] .bg-layer {
+    opacity: 1;
+}
+
+/*
+ * Each ".cloud" is a large, blurred, semi-transparent ellipse
+ * that drifts horizontally using the `drift` keyframe animation.
+ * Multiple clouds at different sizes/speeds create a layered,
+ * parallax-like haze effect.
+ */
+.cloud {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    background: rgba(180, 160, 120, 0.08);
+}
+
+.cloud-1 {
+    width: 700px; height: 250px;
+    top: 10%;
+    animation: drift 25s linear infinite;
+}
+.cloud-2 {
+    width: 500px; height: 180px;
+    top: 40%;
+    animation: drift 35s linear infinite reverse;
+    animation-delay: -10s;
+    background: rgba(160, 140, 100, 0.06);
+}
+.cloud-3 {
+    width: 800px; height: 300px;
+    top: 65%;
+    animation: drift 30s linear infinite;
+    animation-delay: -18s;
+    background: rgba(140, 120, 80, 0.05);
+}
+
+/* Red vignette overlay for the hazardous theme */
+.vignette-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+
+    /*
+     * Radial gradient creates a dark-centre-to-red-edge "vignette".
+     * Combined with the pulse-vignette animation, the edges of the
+     * screen throb red — an unmistakable danger signal.
+     */
+    background: radial-gradient(
+        ellipse at center,
+        transparent 40%,
+        rgba(180, 20, 20, 0.15) 100%
+    );
+}
+
+[data-theme="hazardous"] .vignette-overlay {
+    opacity: 1;
+    animation: pulse-vignette 3s ease-in-out infinite;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §3  NAVIGATION
+   ───────────────────────────────────────────────────────────────── */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--nav-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0;
+    transition: background 0.8s ease, border-color 0.8s ease;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    transition: color 0.8s ease;
+}
+
+.nav-icon { width: 28px; height: 28px; color: var(--accent); transition: color 0.8s ease; }
+
+.nav-links { display: flex; gap: 0.25rem; }
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.nav-link svg { width: 16px; height: 16px; }
+.nav-link:hover { color: var(--text-primary); background: var(--accent-glow); }
+.nav-link.active { color: var(--accent); background: rgba(255,255,255,0.06); }
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+.nav-toggle span {
+    display: block;
+    width: 24px; height: 2px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §4  FLASH MESSAGES
+   ───────────────────────────────────────────────────────────────── */
+.flash-container {
+    max-width: 700px;
+    margin: 1rem auto 0;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 10;
+}
+
+.flash-message {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    animation: slideDown 0.4s ease;
+}
+
+.flash-success {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+}
+.flash-error {
+    background: rgba(231, 76, 60, 0.12);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.flash-close {
+    background: none; border: none;
+    color: inherit; font-size: 1.4rem;
+    cursor: pointer; opacity: 0.7;
+    padding: 0 4px; line-height: 1;
+}
+.flash-close:hover { opacity: 1; }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §5  HERO SECTION
+   ───────────────────────────────────────────────────────────────── */
+.hero {
+    text-align: center;
+    padding: 3rem 1.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-title {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 0.75rem;
+    letter-spacing: -1px;
+}
+
+.hero-emoji {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.hero-subtitle {
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §6  AQI HERO CARD  —  The centrepiece display
+   ─────────────────────────────────────────────────────────────────
+   A glassmorphic card containing a large "ring" around the AQI
+   number.  The ring colour + glow match the theme.
+   In the "hazardous" theme, the ring pulses urgently.
+   ───────────────────────────────────────────────────────────────── */
+.aqi-hero-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2.5rem;
+    margin-top: 1.5rem;
+    border-radius: 20px;
+    animation: fadeInUp 0.6s ease backwards;
+    transition: border-color 0.8s ease, box-shadow 0.8s ease;
+}
+
+/* The coloured ring around the AQI number */
+.aqi-hero-ring {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    border: 4px solid var(--aqi-ring);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px var(--aqi-ring-glow), inset 0 0 12px var(--aqi-ring-glow);
+    transition: border-color 0.8s ease, box-shadow 0.8s ease;
+    flex-shrink: 0;
+}
+
+/* In hazardous mode, the ring pulses urgently */
+[data-theme="hazardous"] .aqi-hero-ring {
+    animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+.aqi-hero-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--aqi-ring);
+    transition: color 0.8s ease;
+}
+
+.aqi-hero-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.aqi-hero-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+.aqi-hero-category {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 2px;
+    transition: color 0.8s ease;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §7  RECOMMENDATION MODULE  —  Content that changes per theme
+   ─────────────────────────────────────────────────────────────────
+   Three panels are always present in the DOM.  JavaScript shows
+   only the one matching the current theme and hides the others.
+   The visible panel fades in with a CSS transition.
+   ───────────────────────────────────────────────────────────────── */
+.recommendation-module {
+    max-width: 600px;
+    margin: 1.5rem auto 0;
+    position: relative;
+    z-index: 1;
+}
+
+.rec-panel {
+    padding: 1.5rem;
+    border-radius: 16px;
+    animation: fadeInUp 0.5s ease backwards;
+}
+
+/* Per-theme panel backgrounds */
+.rec-good {
+    background: rgba(46, 204, 113, 0.08);
+    border: 1px solid rgba(46, 204, 113, 0.15);
+}
+.rec-moderate {
+    background: rgba(212, 168, 67, 0.08);
+    border: 1px solid rgba(212, 168, 67, 0.15);
+}
+.rec-hazardous {
+    background: rgba(232, 67, 74, 0.1);
+    border: 1px solid rgba(232, 67, 74, 0.2);
+    /* In hazardous, the recommendation panel border pulses */
+    animation: fadeInUp 0.5s ease backwards, pulse-border 2s ease-in-out infinite;
+}
+
+.rec-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.rec-panel h3 {
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+    color: var(--accent);
+}
+
+.rec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.rec-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+
+.rec-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §8  GLASSMORPHISM CARDS
+   ─────────────────────────────────────────────────────────────────
+   Glassmorphism = translucent background + backdrop-filter blur.
+   The background colour behind the card (which changes per theme)
+   "shines through" the glass, creating a cohesive look.
+   ───────────────────────────────────────────────────────────────── */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+    transition:
+        background 0.8s ease,
+        border-color 0.8s ease,
+        box-shadow 0.8s ease;
+}
+
+.glass-card:hover {
+    border-color: var(--border-active);
+    box-shadow: var(--shadow-glow);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §9  FORM ELEMENTS
+   ───────────────────────────────────────────────────────────────── */
+.form-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-card {
+    padding: 1.75rem;
+    animation: fadeInUp 0.5s ease backwards;
+}
+.form-card:nth-child(1) { animation-delay: 0.05s; }
+.form-card:nth-child(2) { animation-delay: 0.12s; }
+.form-card:nth-child(3) { animation-delay: 0.19s; }
+.form-card:nth-child(4) { animation-delay: 0.26s; }
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.step-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: var(--bg-primary);
+    font-weight: 800;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    transition: background 0.8s ease;
+}
+
+.form-card-header h2 { font-size: 1.15rem; }
+
+.form-card-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+}
+
+.form-group { margin-bottom: 1.25rem; }
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+.form-group input[type="text"]::placeholder { color: var(--text-muted); }
+.form-group input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.form-hint {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Geolocation button */
+.geo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border-active);
+    border-radius: 9999px;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.geo-btn svg { width: 18px; height: 18px; }
+.geo-btn:hover { background: rgba(255,255,255,0.06); box-shadow: var(--shadow-glow); transform: translateY(-1px); }
+.geo-btn:active { transform: translateY(0); }
+
+.geo-status {
+    font-size: 0.82rem;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    min-height: 1.2em;
+}
+.geo-status.success { color: #2ecc71; }
+.geo-status.error   { color: #e74c3c; }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §10  CUSTOM RANGE SLIDERS
+   ─────────────────────────────────────────────────────────────────
+   Native <input type="range"> elements are styled via vendor
+   prefixes (-webkit- for Chrome/Edge/Safari, -moz- for Firefox).
+
+   The slider "track" uses the accent gradient.
+   The slider "thumb" is a glowing circle.
+   ───────────────────────────────────────────────────────────────── */
+.slider-wrapper {
+    padding: 0.5rem 0;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.custom-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-input);
+    outline: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+/* Filled portion of the track (WebKit browsers) */
+.custom-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+
+/* The draggable thumb circle (WebKit) */
+.custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg-primary);
+    cursor: grab;
+    margin-top: -8px;         /* Vertically centre on the 6px track   */
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.custom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 18px var(--accent-glow);
+}
+.custom-slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+
+/* Firefox track */
+.custom-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    border: none;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+
+/* Firefox thumb */
+.custom-slider::-moz-range-thumb {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg-primary);
+    cursor: grab;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Real-time feedback display below the slider */
+.slider-feedback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-input);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+.slider-emoji { font-size: 1.6rem; }
+.slider-text {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+.slider-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-glow);
+    padding: 3px 10px;
+    border-radius: 9999px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §11  SYMPTOM PILL TOGGLES
+   ─────────────────────────────────────────────────────────────────
+   Each symptom is a <label> wrapping a hidden <input checkbox>.
+   The .pill-face is the visible pill shape.  When :checked, the
+   pill gets a glowing accent border + background — no JavaScript
+   needed for the visual state (pure CSS!).
+   ───────────────────────────────────────────────────────────────── */
+.symptom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0.6rem;
+}
+
+/* Hide the actual checkbox — we style .pill-face instead */
+.symptom-pill input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+}
+
+.pill-face {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+    border-radius: 9999px;       /* Full pill shape                    */
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.25s ease;
+    user-select: none;
+}
+.pill-icon { font-size: 1.1rem; line-height: 1; }
+
+.pill-face:hover {
+    border-color: var(--border-active);
+    background: var(--accent-glow);
+}
+
+/* ─── Checked state: pure CSS, triggered by :checked ─── */
+.symptom-pill input:checked + .pill-face {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--text-primary);
+    box-shadow: 0 0 14px var(--accent-glow);
+}
+
+/* "No Symptoms" special checked style (green instead of accent) */
+.symptom-pill-none input:checked + .pill-face {
+    border-color: #2ecc71;
+    background: rgba(46, 204, 113, 0.1);
+    box-shadow: 0 0 14px rgba(46, 204, 113, 0.15);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §12  SUBMIT BUTTON
+   ───────────────────────────────────────────────────────────────── */
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent-gradient);
+    border: none;
+    border-radius: 14px;
+    color: var(--bg-primary);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+/* Shine sweep effect on hover */
+.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+    z-index: -1;
+}
+.submit-btn:hover { box-shadow: 0 4px 24px var(--accent-glow); transform: translateY(-2px); }
+.submit-btn:hover::before { left: 100%; }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: var(--bg-primary);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §13  DASHBOARD COMPONENTS
+   ───────────────────────────────────────────────────────────────── */
+.dash-header {
+    text-align: center;
+    padding: 3rem 1.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+.dash-title {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 900;
+    letter-spacing: -0.5px;
+}
+.dash-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-section,
+.charts-section,
+.reports-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease backwards;
+}
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.12s; }
+.stat-card:nth-child(3) { animation-delay: 0.19s; }
+.stat-card:nth-child(4) { animation-delay: 0.26s; }
+
+.stat-card:hover { border-color: var(--border-active); box-shadow: var(--shadow-glow); transform: translateY(-3px); }
+
+.stat-icon { font-size: 2rem; flex-shrink: 0; }
+.stat-info { display: flex; flex-direction: column; }
+.stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
+.stat-value-sm { font-size: 1.1rem; }
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.stat-sub { font-size: 0.82rem; font-weight: 600; margin-top: 2px; }
+
+/* AQI dot — coloured circle indicator */
+.aqi-dot {
+    display: inline-block;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    box-shadow: 0 0 12px currentColor;
+}
+.aqi-dot.good            { background: #2ecc71; color: #2ecc71; }
+.aqi-dot.moderate         { background: #f1c40f; color: #f1c40f; }
+.aqi-dot.unhealthy-sg     { background: #e67e22; color: #e67e22; }
+.aqi-dot.unhealthy        { background: #e74c3c; color: #e74c3c; }
+.aqi-dot.very-unhealthy   { background: #9b59b6; color: #9b59b6; }
+.aqi-dot.hazardous        { background: #8b0000; color: #8b0000; }
+.aqi-dot.unknown          { background: #7f8c8d; color: #7f8c8d; }
+
+.stat-sub.good            { color: #2ecc71; }
+.stat-sub.moderate         { color: #f1c40f; }
+.stat-sub.unhealthy-sg     { color: #e67e22; }
+.stat-sub.unhealthy        { color: #e74c3c; }
+.stat-sub.very-unhealthy   { color: #9b59b6; }
+.stat-sub.hazardous        { color: #8b0000; }
+.stat-sub.unknown          { color: #7f8c8d; }
+
+/* Charts */
+.charts-section { margin-bottom: 2rem; }
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+}
+.chart-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+.chart-card:hover { border-color: var(--border-active); box-shadow: var(--shadow-glow); }
+.chart-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent); }
+.chart-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
+.chart-img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §14  REPORTS TABLE
+   ───────────────────────────────────────────────────────────────── */
+.reports-section { margin-bottom: 2rem; }
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--glass-bg);
+    font-size: 0.88rem;
+}
+
+.reports-table thead {
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+}
+.reports-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+}
+.reports-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+.reports-table tbody tr { transition: background 0.2s ease; }
+.reports-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.td-time { white-space: nowrap; font-size: 0.82rem; color: var(--text-muted); }
+.td-center { text-align: center; }
+
+/* AQI pill badges in the table */
+.aqi-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.aqi-pill.good            { background: rgba(46,204,113,0.15); color: #2ecc71; }
+.aqi-pill.moderate         { background: rgba(241,196,15,0.15); color: #f1c40f; }
+.aqi-pill.unhealthy-sg     { background: rgba(230,126,34,0.15); color: #e67e22; }
+.aqi-pill.unhealthy        { background: rgba(231,76,60,0.15);  color: #e74c3c; }
+.aqi-pill.very-unhealthy   { background: rgba(155,89,182,0.15); color: #9b59b6; }
+.aqi-pill.hazardous        { background: rgba(139,0,0,0.15);    color: #8b0000; }
+.aqi-pill.unknown          { background: rgba(127,140,141,0.15);color: #7f8c8d; }
+
+.symptom-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    font-size: 0.73rem;
+    font-weight: 500;
+    margin: 2px;
+    color: var(--accent);
+    white-space: nowrap;
+}
+.symptom-tag.none {
+    background: rgba(46, 204, 113, 0.08);
+    border-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+.empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.7; }
+.empty-state h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+.empty-state p { font-size: 0.95rem; color: var(--text-muted); }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §15  FOOTER
+   ───────────────────────────────────────────────────────────────── */
+.main-content { flex: 1; }
+
+.footer {
+    text-align: center;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    margin-top: auto;
+    position: relative;
+    z-index: 1;
+    transition: background 0.8s ease, border-color 0.8s ease;
+}
+.footer-content p { font-size: 0.85rem; color: var(--text-muted); }
+.footer-sub { font-size: 0.75rem; margin-top: 4px; opacity: 0.6; }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §16  ANIMATIONS & KEYFRAMES
+   ───────────────────────────────────────────────────────────────── */
+
+/* Entrance: slide up with fade */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Entrance: slide down (flash messages) */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero emoji floating bob */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+/* Loading spinner rotation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/*
+ * CLOUD DRIFT  —  used by the moderate/smoggy theme.
+ * Clouds start off-screen left, drift to off-screen right, then loop.
+ */
+@keyframes drift {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(120vw); }
+}
+
+/*
+ * PULSE VIGNETTE  —  used by the hazardous theme.
+ * The red edge vignette brightens and dims rhythmically,
+ * creating an ambient "alarm" feel at the edges of the viewport.
+ */
+@keyframes pulse-vignette {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+}
+
+/*
+ * PULSE RING  —  the AQI hero card ring throbs in hazardous mode.
+ * The box-shadow (glow) expands and contracts, creating urgency.
+ */
+@keyframes pulse-ring {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--aqi-ring-glow), inset 0 0 12px var(--aqi-ring-glow);
+    }
+    50% {
+        box-shadow: 0 0 40px var(--aqi-ring-glow), inset 0 0 20px var(--aqi-ring-glow);
+    }
+}
+
+/*
+ * PULSE BORDER  —  the hazardous recommendation panel border
+ * flickers between dim and bright, reinforcing the "danger" tone.
+ */
+@keyframes pulse-border {
+    0%, 100% { border-color: rgba(232, 67, 74, 0.15); }
+    50%      { border-color: rgba(232, 67, 74, 0.5); }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   §17  RESPONSIVE BREAKPOINTS
+   ───────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        flex-direction: column;
+        padding: 1rem 1.5rem;
+        background: var(--nav-bg);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+    }
+    .nav-links.open { display: flex; }
+    .nav-toggle { display: flex; }
+
+    .aqi-hero-card { flex-direction: column; padding: 1.25rem; gap: 1rem; }
+    .aqi-hero-info { text-align: center; }
+
+    .rec-grid { grid-template-columns: 1fr; }
+
+    .charts-grid { grid-template-columns: 1fr; }
+
+    .slider-labels { font-size: 0.72rem; }
+
+    .symptom-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
+
+    .hero { padding: 2rem 1rem 1rem; }
+
+    .form-card { padding: 1.25rem; }
+    .stat-card { padding: 1.25rem; }
+}
+
+@media (max-width: 480px) {
+    .symptom-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .nav-container { padding: 0 1rem; }
+    .form-section { padding: 0 1rem 2rem; }
+    .aqi-hero-ring { width: 72px; height: 72px; }
+    .aqi-hero-value { font-size: 1.6rem; }
+}

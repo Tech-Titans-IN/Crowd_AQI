@@ -1,0 +1,144 @@
+<!--
+  base.html  —  Shared Layout with Dynamic Theming Support
+  ==========================================================
+  KEY CONCEPT: data-theme attribute
+  ─────────────────────────────────
+  The <body> tag carries a `data-theme` attribute that is set by Flask
+  on the server side (initial_theme) and can be switched by JavaScript
+  on the client side.  All CSS colours reference CSS Custom Properties
+  (variables) that change based on this attribute:
+
+     data-theme="good"       →  Forest green / calm palette
+     data-theme="moderate"   →  Smoggy mustard / haze palette
+     data-theme="hazardous"  →  Crimson red / alarm palette
+
+  CSS transitions on the body ensure smooth colour fading between themes.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO -->
+    <meta name="description" content="Crowd-AQI — Crowdsourced Air Quality Intelligence. Report and monitor hyper-local air quality.">
+
+    <title>{% block title %}Crowd-AQI{% endblock %}</title>
+
+    <!-- Google Fonts: Inter — clean modern sans-serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Main stylesheet (contains all 3 theme palettes) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<!--
+  The data-theme attribute is set by Flask's Jinja2 template variable.
+  JavaScript will update this attribute when the user's live AQI is fetched.
+  The CSS `transition` on body makes the colour change smooth (0.8s ease).
+-->
+<body data-theme="{{ initial_theme | default('good') }}">
+
+    <!-- ══════════════ ANIMATED BACKGROUND LAYERS ══════════════
+         These divs are styled differently per theme:
+         - "good"     → invisible (clean background)
+         - "moderate" → drifting haze clouds (CSS animation)
+         - "hazardous" → pulsing red vignette overlay
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="bg-layer" id="bg-layer">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+    </div>
+    <div class="vignette-overlay" id="vignette-overlay"></div>
+
+    <!-- ══════════════ NAVIGATION BAR ══════════════ -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <!-- Wind SVG icon -->
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.59 4.59A2 2 0 1 1 11 8H2"/>
+                    <path d="M12.59 19.41A2 2 0 1 0 14 16H2"/>
+                    <path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2"/>
+                </svg>
+                <span>Crowd-AQI</span>
+            </a>
+
+            <div class="nav-links" id="nav-links">
+                <a href="{{ url_for('index') }}"
+                   class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" id="nav-report">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                    </svg>
+                    Report
+                </a>
+                <a href="{{ url_for('dashboard') }}"
+                   class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    Dashboard
+                </a>
+            </div>
+
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ══════════════ FLASH MESSAGES ══════════════ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container" id="flash-container">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}" role="alert">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ══════════════ MAIN CONTENT ══════════════ -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ══════════════ FOOTER ══════════════ -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Crowd-AQI &mdash; Capstone Research Project</p>
+            <p class="footer-sub">Crowdsourced Air Quality Intelligence</p>
+        </div>
+    </footer>
+
+    <!--
+      Pass the initial AQI value from Flask → JavaScript.
+      The JS theme engine reads this on DOMContentLoaded to set the
+      correct theme *before* geolocation updates it with a live value.
+    -->
+    <script>
+        window.CROWD_AQI_CONFIG = {
+            initialAqi:   {{ initial_aqi if initial_aqi is not none else 'null' }},
+            initialTheme: "{{ initial_theme | default('good') }}",
+            waqiToken:    "{{ waqi_token | default('demo') }}"
+        };
+    </script>
+
+    <!-- Main JavaScript (theme engine + form logic) -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
